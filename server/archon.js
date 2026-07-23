@@ -32,6 +32,10 @@ export function run(keymaster, fn) {
 
 const keymasters = new Map();
 
+export function evictKeymaster(walletPath) {
+    keymasters.delete(path.resolve(walletPath));
+}
+
 export async function getKeymaster(walletPath, passphrase) {
     const key = path.resolve(walletPath);
     if (!keymasters.has(key)) {

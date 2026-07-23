@@ -1,9 +1,10 @@
 import crypto from 'crypto';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import QRCode from 'qrcode';
-import { getKeymaster, getNode, run, REGISTRY } from './archon.js';
+import { evictKeymaster, getKeymaster, getNode, run, REGISTRY } from './archon.js';
 import { loadStore, saveStore, ORGANIZER_WALLET, WALLETS_DIR } from './store.js';
 import { seed } from './seed.js';
 
@@ -27,15 +28,27 @@ function slugify(name) {
 
 // ---- onboarding ----------------------------------------------------------
 
-app.post('/api/onboard', async (req, res) => {
-    try {
-        const name = slugify(String(req.body?.name || ''));
-        if (!name) return res.status(400).json({ error: 'name required' });
+const onboarding = new Set();
 
+app.post('/api/onboard', async (req, res) => {
+    const name = slugify(String(req.body?.name || ''));
+    if (!name) return res.status(400).json({ error: 'name required' });
+    if (onboarding.has(name)) return res.status(409).json({ error: 'onboarding already in progress, hang on' });
+    onboarding.add(name);
+    try {
         const store = loadStore();
         if (store.attendees[name]) return res.status(409).json({ error: 'name taken', attendee: publicAttendee(store.attendees[name]) });
 
         const walletFile = path.join(WALLETS_DIR, `${name}.json`);
+
+        // A wallet file without a store entry is a crashed onboard. Its random
+        // passphrase was never persisted, so it can't be reused — discard it and
+        // let the attendee start clean under the same name.
+        if (fs.existsSync(walletFile)) {
+            evictKeymaster(walletFile);
+            fs.rmSync(walletFile);
+        }
+
         const passphrase = crypto.randomBytes(24).toString('base64url');
         const attendeeKm = await getKeymaster(walletFile, passphrase);
 
@@ -61,6 +74,8 @@ app.post('/api/onboard', async (req, res) => {
     } catch (err) {
         console.error('onboard failed:', err);
         res.status(500).json({ error: String(err.message || err) });
+    } finally {
+        onboarding.delete(name);
     }
 });
 
