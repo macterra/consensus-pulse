@@ -3,7 +3,7 @@
 **Measuring consensus about consensus — one attendee, one credential, one verifiable ballot.**
 
 **Code:** https://github.com/macterra/consensus-pulse
-**Live demo:** https://hal.tail8f9c2.ts.net (served from our hackathon laptop via Tailscale Funnel — up during the event)
+**Live demo:** https://hal.tailc9fdf.ts.net (served from our hackathon laptop via Tailscale Funnel — up during the event)
 
 ## Inspiration
 

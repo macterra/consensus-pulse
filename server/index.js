@@ -13,6 +13,9 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'letsfork';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
+// Behind Tailscale Funnel (TLS terminates at the proxy) — honor X-Forwarded-Proto
+// so the QR code link comes out https.
+app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.static(path.join(ROOT, 'web')));
 

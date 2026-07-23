@@ -11,7 +11,7 @@ Honest scope note: the one-ballot-per-credential rule is enforced by the protoco
 but credential issuance in this build is open (pick a handle, get a credential).
 Binding issuance to a conference badge scan is the intended deployment policy — TBD.
 
-**Live demo (during the event):** https://hal.tail8f9c2.ts.net — served from the
+**Live demo (during the event):** https://hal.tailc9fdf.ts.net — served from the
 hackathon laptop via `tailscale funnel --bg 3210`; keys never leave the machine.
 
 - [DEVPOST.md](DEVPOST.md) — full project writeup (what/why/how)

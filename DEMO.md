@@ -7,10 +7,10 @@
    ARCHON_PASSPHRASE=<passphrase> PORT=3210 \
      PATH=~/.nvm/versions/node/v22.15.1/bin:$PATH node server/index.js
    ```
-2. Expose it publicly: `tailscale funnel --bg 3210` → https://hal.tail8f9c2.ts.net
+2. Expose it publicly: `tailscale funnel --bg 3210` → https://hal.tailc9fdf.ts.net
    (use `--bg`; the foreground form stops serving when you close it). Confirm with
    `tailscale funnel status` and load the URL from your phone on cell data.
-3. Open two browser windows: **dashboard** (`https://hal.tail8f9c2.ts.net/?admin=letsfork`,
+3. Open two browser windows: **dashboard** (`https://hal.tailc9fdf.ts.net/?admin=letsfork`,
    projector) and your **phone** for joining — audience phones use the public URL,
    no venue Wi-Fi dependency.
 4. Optional insurance: pre-onboard 4–5 attendees and cast a few votes on the
