@@ -1,6 +1,6 @@
 # Consensus Pulse
 
-**Measuring consensus about consensus — one badge, one DID, one verifiable ballot.**
+**Measuring consensus about consensus — one attendee, one credential, one verifiable ballot.**
 
 **Code:** https://github.com/macterra/consensus-pulse
 
@@ -17,10 +17,14 @@ Consensus Pulse is a straw poll you can actually check.
 
 ## What it does
 
-- **One badge, one vote.** Scanning the QR at the venue gives an attendee a
+- **One credential, one vote.** Scanning the QR at the venue gives an attendee a
   sovereign identity (a `did:cid` DID) and a bitcoin++ Toronto attendee
-  **verifiable credential**. Only credential holders can be registered as voters
-  — that credential is the sybil gate.
+  **verifiable credential**. Only credential holders can be registered as voters,
+  and the protocol allows exactly one ballot per credential holder per poll.
+  To be clear about what's enforced where: the one-ballot rule is protocol; the
+  sybil gate is issuance *policy*. In this hackathon build issuance is open —
+  pick a handle, get a credential. Binding issuance to something scarce (ideally
+  a conference badge scan) is the intended deployment policy, still TBD.
 - **Encrypted ballots.** Each vote on a proposal (BIP 119 / BIP 348 / both /
   status quo) is an **encrypted ballot DID**: readable by the poll organizer for
   tallying and by the voter themselves, sealed to everyone else until reveal. No
@@ -80,6 +84,8 @@ model gives you secret ballots and public results with zero custom cryptography.
 
 ## What's next
 
+- Badge-bound credential issuance — the piece that turns the open demo gate into
+  real sybil resistance (badge scan or per-ticket claim codes, design TBD).
 - Self-custodied voting from attendees' own Archon wallets (challenge/response
   is already in the SDK).
 - `BTC:mainnet` anchors for polls that matter.

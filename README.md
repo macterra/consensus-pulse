@@ -4,8 +4,12 @@
 Bitcoin soft-fork proposals. Built on [Archon](https://archon.technology) DIDs for the
 bitcoin++ Toronto 2026 (Consensus Edition) hackathon.
 
-One badge → one DID + attendee credential → one encrypted, auditable ballot.
+One attendee → one DID + attendee credential → one encrypted, auditable ballot.
 Results are revealed in an organizer ceremony and anchored to `BTC:signet`.
+
+Honest scope note: the one-ballot-per-credential rule is enforced by the protocol,
+but credential issuance in this build is open (pick a handle, get a credential).
+Binding issuance to a conference badge scan is the intended deployment policy — TBD.
 
 - [DEVPOST.md](DEVPOST.md) — full project writeup (what/why/how)
 - [DEMO.md](DEMO.md) — 3-minute stage script
