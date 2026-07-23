@@ -36,7 +36,7 @@ Consensus Pulse is a straw poll you can actually check.
 
 ## How we built it
 
-Everything rides on [Archon](https://archon.technology) (MDIP): an Express
+Everything rides on [Archon](https://archon.technology): an Express
 server uses the `@didcid/keymaster` SDK against a public Archon node
 (Gatekeeper/Drawbridge), with the organizer's wallet issuing credentials and
 owning the polls. Archon **polls are encrypted vaults**: adding a voter adds a
@@ -90,5 +90,5 @@ model gives you secret ballots and public results with zero custom cryptography.
 
 ## Built with
 
-Archon / MDIP (`@didcid/keymaster`, `@didcid/clients`, `@didcid/cipher`),
+Archon (`@didcid/keymaster`, `@didcid/clients`, `@didcid/cipher`),
 Node 22, Express, vanilla JS. Registries: `hyperswarm` + `BTC:signet`.
