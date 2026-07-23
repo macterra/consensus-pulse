@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify — Consensus Pulse</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header class="site"><h1>Verify</h1></header>
+  <p class="tagline">Resolve any DID from this poll — voter, credential, poll, or ballot — straight from the Archon registry.</p>
+
+  <div class="card">
+    <input type="text" id="did" placeholder="did:cid:…" autocomplete="off">
+    <div class="vote-options"><button id="go">Resolve</button></div>
+  </div>
+
+  <div class="card" id="result-card" hidden>
+    <h2 id="result-title">DID document</h2>
+    <div class="meta" id="result-meta"></div>
+    <pre class="doc" id="result"></pre>
+  </div>
+
+  <footer><a href="/">← live results</a></footer>
+</main>
+
+<script>
+document.getElementById('go').addEventListener('click', resolveDid);
+document.getElementById('did').addEventListener('keydown', e => { if (e.key === 'Enter') resolveDid(); });
+
+async function resolveDid() {
+  const did = document.getElementById('did').value.trim();
+  if (!did) return;
+  const card = document.getElementById('result-card');
+  card.hidden = false;
+  document.getElementById('result').textContent = 'resolving…';
+  document.getElementById('result-meta').innerHTML = '';
+  const res = await fetch(`/api/verify/${encodeURIComponent(did)}`);
+  const body = await res.json();
+  if (!res.ok) {
+    document.getElementById('result').textContent = body.error || 'resolution failed';
+    return;
+  }
+  const doc = body.doc;
+  const meta = doc.didDocumentMetadata || {};
+  const reg = doc.didDocumentRegistration || {};
+  document.getElementById('result-meta').innerHTML = [
+    reg.type && `type: ${reg.type}`,
+    reg.registry && `registry: ${reg.registry}`,
+    meta.created && `created: ${meta.created}`,
+    meta.confirmed !== undefined && `confirmed: ${meta.confirmed}`,
+    meta.versionSequence && `version: ${meta.versionSequence}`,
+  ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
+  document.getElementById('result').textContent = JSON.stringify(doc, null, 2);
+}
+
+const params = new URLSearchParams(location.search);
+if (params.get('did')) {
+  document.getElementById('did').value = params.get('did');
+  resolveDid();
+}
+</script>
+</body>
+</html>

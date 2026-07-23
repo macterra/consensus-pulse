@@ -1,0 +1,5 @@
+node_modules/
+# Organizer wallet (encrypted seed) — never commit
+wallet.json
+# Runtime state: attendee wallets + their passphrases live here
+data/

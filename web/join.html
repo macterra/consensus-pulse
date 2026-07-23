@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join — Consensus Pulse</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header class="site"><h1>Join the poll</h1></header>
+  <p class="tagline">Get a DID and an attendee credential, then cast verifiable ballots.</p>
+
+  <div class="card" id="onboard-card">
+    <h2>Who are you?</h2>
+    <p class="desc">Pick a handle. You'll get a sovereign identity (DID) on the Archon registry and a bitcoin++ attendee credential — the one-badge-one-vote gate.</p>
+    <input type="text" id="name" placeholder="e.g. satoshi" maxlength="32" autocomplete="off">
+    <div class="vote-options">
+      <button id="join-btn">Create my DID</button>
+    </div>
+    <p id="join-status"></p>
+  </div>
+
+  <div id="identity" hidden>
+    <div class="card">
+      <h2>Your identity</h2>
+      <div class="meta" style="flex-direction:column;align-items:flex-start">
+        <span>DID <code id="my-did"></code></span>
+        <span>credential <code id="my-cred"></code></span>
+      </div>
+    </div>
+    <section id="ballots"></section>
+  </div>
+
+  <footer><a href="/">← live results</a> · <a href="verify.html">verify a DID</a></footer>
+</main>
+
+<script>
+const OPTIONS = ['Support', 'Oppose', 'Need more research'];
+let me = null;
+
+function setStatus(msg, isError) {
+  const el = document.getElementById('join-status');
+  el.textContent = msg;
+  el.className = isError ? 'error' : '';
+}
+
+async function showIdentity() {
+  document.getElementById('onboard-card').hidden = true;
+  document.getElementById('identity').hidden = false;
+  document.getElementById('my-did').textContent = me.did;
+  document.getElementById('my-cred').textContent = me.credentialDid;
+
+  const res = await fetch('/api/proposals');
+  const { proposals } = await res.json();
+  const root = document.getElementById('ballots');
+  root.innerHTML = '';
+  for (const p of proposals) {
+    const voted = me.votes[p.slug];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h2>${p.title}</h2>
+      <p class="desc">${p.description}</p>
+      ${voted
+        ? `<p class="voted">✓ ballot cast — <code>${voted}</code></p>`
+        : `<div class="vote-options">${OPTIONS.map((o, i) =>
+            `<button class="secondary" data-slug="${p.slug}" data-vote="${i + 1}">${o}</button>`).join('')}
+           </div><p class="vote-status"></p>`}
+    `;
+    root.appendChild(card);
+  }
+  root.querySelectorAll('button[data-slug]').forEach(btn => {
+    btn.addEventListener('click', () => vote(btn));
+  });
+}
+
+async function vote(btn) {
+  const card = btn.closest('.card');
+  card.querySelectorAll('button').forEach(b => b.disabled = true);
+  card.querySelector('.vote-status').textContent = 'casting encrypted ballot…';
+  const res = await fetch('/api/vote', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: me.name, slug: btn.dataset.slug, vote: Number(btn.dataset.vote) }),
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    card.querySelector('.vote-status').textContent = body.error || 'vote failed';
+    card.querySelectorAll('button').forEach(b => b.disabled = false);
+    return;
+  }
+  me.votes[btn.dataset.slug] = body.ballotDid;
+  localStorage.setItem('pulse-me', JSON.stringify(me));
+  showIdentity();
+}
+
+document.getElementById('join-btn').addEventListener('click', async () => {
+  const name = document.getElementById('name').value.trim();
+  if (!name) return setStatus('enter a handle first', true);
+  document.getElementById('join-btn').disabled = true;
+  setStatus('creating DID, issuing credential… (~10s)');
+  const res = await fetch('/api/onboard', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  const body = await res.json();
+  document.getElementById('join-btn').disabled = false;
+  if (!res.ok) return setStatus(body.error || 'failed', true);
+  me = body.attendee;
+  localStorage.setItem('pulse-me', JSON.stringify(me));
+  showIdentity();
+});
+
+const saved = localStorage.getItem('pulse-me');
+if (saved) {
+  me = JSON.parse(saved);
+  fetch(`/api/attendee/${me.name}`).then(r => r.json()).then(b => {
+    if (b.attendee) { me = b.attendee; showIdentity(); }
+  });
+}
+</script>
+</body>
+</html>

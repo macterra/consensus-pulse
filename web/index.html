@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consensus Pulse — bitcoin++ Toronto</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header class="site">
+    <h1>Consensus Pulse</h1>
+    <span class="badge">bitcoin++ Toronto · Consensus Edition</span>
+  </header>
+  <p class="tagline">Measuring consensus about consensus — one badge, one DID, one verifiable ballot.</p>
+
+  <div class="card">
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="attendee-count">–</div><div class="cap">credentialed voters</div></div>
+      <div class="stat"><div class="num" id="ballot-count">–</div><div class="cap">ballots cast</div></div>
+      <div class="qr-wrap stat">
+        <img id="qr" alt="QR code to join" hidden>
+        <div class="cap">scan to join &amp; vote</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="proposals"></section>
+
+  <footer>
+    Every voter DID, credential, and revealed poll resolves on the
+    <a href="https://archon.technology">Archon</a> registry —
+    <a href="verify.html">verify anything</a>.
+  </footer>
+</main>
+
+<script>
+async function refresh() {
+  const res = await fetch('/api/proposals');
+  if (!res.ok) return;
+  const { proposals, attendeeCount } = await res.json();
+  document.getElementById('attendee-count').textContent = attendeeCount;
+  document.getElementById('ballot-count').textContent =
+    proposals.reduce((n, p) => n + (p.ballotCount || 0), 0);
+
+  const root = document.getElementById('proposals');
+  root.innerHTML = '';
+  for (const p of proposals) {
+    const max = Math.max(1, ...p.tally.map(t => t.count));
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h2>${p.title}</h2>
+      <p class="desc">${p.description}</p>
+      ${p.tally.filter(t => t.vote > 0).map(t => `
+        <div class="tally-row" title="${t.option}: ${t.count} ballot${t.count === 1 ? '' : 's'}">
+          <div class="tally-label">${t.option}</div>
+          <div class="tally-track"><div class="tally-bar" ${t.count ? '' : 'data-zero'}
+            style="width:${(t.count / max) * 100}%"></div></div>
+          <div class="tally-count">${t.count}</div>
+        </div>`).join('')}
+      <div class="meta">
+        <span>deadline ${new Date(p.deadline).toLocaleString()}</span>
+        <span>poll <code>${p.did}</code></span>
+        ${p.revealed ? '<span class="revealed">✓ results published on-registry</span>' : ''}
+        ${p.anchorDid ? `<span class="revealed">⚓ anchored on BTC:signet — <a href="verify.html?did=${p.anchorDid}">verify</a></span>` : ''}
+      </div>
+      ${adminToken && !p.revealed ? `
+        <div class="vote-options">
+          <button class="secondary reveal-btn" data-slug="${p.slug}">Close &amp; reveal results on-registry</button>
+          <span class="vote-status"></span>
+        </div>` : ''}`;
+    root.appendChild(card);
+  }
+  root.querySelectorAll('.reveal-btn').forEach(btn => btn.addEventListener('click', () => reveal(btn)));
+}
+
+const adminToken = new URLSearchParams(location.search).get('admin');
+
+async function reveal(btn) {
+  btn.disabled = true;
+  const status = btn.parentElement.querySelector('.vote-status');
+  status.textContent = 'publishing results to the poll DID…';
+  const res = await fetch('/api/admin/reveal', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ token: adminToken, slug: btn.dataset.slug }),
+  });
+  const body = await res.json();
+  if (!res.ok || !body.ok) {
+    status.textContent = body.error || 'reveal failed';
+    btn.disabled = false;
+    return;
+  }
+  refresh();
+}
+
+async function loadQr() {
+  const res = await fetch('/api/qr');
+  if (!res.ok) return;
+  const { dataUrl } = await res.json();
+  const img = document.getElementById('qr');
+  img.src = dataUrl;
+  img.hidden = false;
+}
+
+loadQr();
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

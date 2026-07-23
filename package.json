@@ -1,0 +1,20 @@
+{
+  "name": "consensus-pulse",
+  "version": "0.1.0",
+  "description": "Sybil-resistant straw polls on Bitcoin soft-fork proposals, built on Archon DIDs — bitcoin++ Toronto Consensus Edition hackathon",
+  "type": "module",
+  "engines": {
+    "node": "22.15.x"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "seed": "node server/seed.js"
+  },
+  "dependencies": {
+    "@didcid/cipher": "latest",
+    "@didcid/clients": "latest",
+    "@didcid/keymaster": "latest",
+    "express": "^4.19.0",
+    "qrcode": "^1.5.3"
+  }
+}
