@@ -2,6 +2,8 @@
 
 **Measuring consensus about consensus — one badge, one DID, one verifiable ballot.**
 
+**Code:** https://github.com/macterra/consensus-pulse
+
 ## Inspiration
 
 The defining argument at bitcoin++ Consensus Edition — and on bitcoin-dev, and on
